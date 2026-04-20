@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
@@ -15,8 +16,8 @@ export default function AdminPage() {
   const [imageUrl, setImageUrl] = useState("");
   const [useUrl, setUseUrl] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState("dashboard");
 
-  // Edit modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingId, setEditingId] = useState("");
   const [editName, setEditName] = useState("");
@@ -62,7 +63,6 @@ export default function AdminPage() {
 
     let finalImageUrl = editImageUrl;
 
-    // Jika pilih upload file baru
     if (!editUseUrl && editImageFile) {
       const formData = new FormData();
       formData.append("image", editImageFile);
@@ -75,7 +75,6 @@ export default function AdminPage() {
         });
 
         const data = await response.json();
-
         if (!data.success) {
           alert("Upload gambar gagal!");
           return;
@@ -89,7 +88,6 @@ export default function AdminPage() {
       }
     }
 
-    // Update Firestore
     await updateDoc(doc(db, "product", editingId), {
       name: editName,
       price: Number(editPrice),
@@ -171,7 +169,6 @@ export default function AdminPage() {
 
     let finalImageUrl = imageUrl;
 
-    // Jika pilih upload file
     if (!useUrl && imageFile) {
       const formData = new FormData();
       formData.append("image", imageFile);
@@ -184,7 +181,6 @@ export default function AdminPage() {
         });
 
         const data = await response.json();
-
         if (!data.success) {
           alert("Upload gambar gagal!");
           return;
@@ -198,7 +194,6 @@ export default function AdminPage() {
       }
     }
 
-    // Simpan ke Firestore
     await addDoc(collection(db, "product"), {
       name,
       price: Number(price),
@@ -210,7 +205,6 @@ export default function AdminPage() {
     });
 
     alert("Produk berhasil ditambahkan!");
-
     setName("");
     setPrice("");
     setStock("");
@@ -219,245 +213,387 @@ export default function AdminPage() {
     getProducts();
   };
 
+  const lowStockCount = products.filter((item) => Number(item.stock) <= 5).length;
+  const totalStock = products.reduce((sum, item) => sum + Number(item.stock || 0), 0);
+
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-xl font-bold mb-4">Admin Dashboard</h1>
+    <div className="min-h-screen bg-slate-950 text-slate-100">
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="w-64 border-r border-white/10 bg-slate-900/60 p-6 sticky top-0 h-screen overflow-y-auto">
+          <h1 className="text-2xl font-bold text-white mb-8">Admin Panel</h1>
+          <nav className="space-y-3">
+            <button
+              onClick={() => setActiveTab("dashboard")}
+              className={`w-full text-left px-4 py-3 rounded-2xl font-semibold transition ${
+                activeTab === "dashboard"
+                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                  : "text-slate-300 hover:bg-slate-800"
+              }`}
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={() => setActiveTab("tambah")}
+              className={`w-full text-left px-4 py-3 rounded-2xl font-semibold transition ${
+                activeTab === "tambah"
+                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                  : "text-slate-300 hover:bg-slate-800"
+              }`}
+            >
+              Tambah Produk
+            </button>
+            <button
+              onClick={() => setActiveTab("produk")}
+              className={`w-full text-left px-4 py-3 rounded-2xl font-semibold transition ${
+                activeTab === "produk"
+                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                  : "text-slate-300 hover:bg-slate-800"
+              }`}
+            >
+              Daftar Produk
+            </button>
+            <hr className="border-white/10 my-4" />
+            <button
+              onClick={() => window.open("/", "_blank")}
+              className="w-full text-left px-4 py-3 rounded-2xl font-semibold text-slate-300 hover:bg-slate-800 transition"
+            >
+              Lihat Toko
+            </button>
+            <Link href="/login" className="block">
+              <button className="w-full text-left px-4 py-3 rounded-2xl font-semibold text-rose-300 hover:bg-rose-500/10 transition">
+                Logout
+              </button>
+            </Link>
+          </nav>
+        </aside>
 
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-2">Tambah Produk</h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 max-w-md">
-          <input
-            type="text"
-            placeholder="Nama Produk"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="border p-2 rounded"
-            required
-          />
+        {/* Main Content */}
+        <main className="flex-1 p-8">
+          {activeTab === "dashboard" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-3xl font-bold text-white mb-2">Dashboard</h2>
+                <p className="text-slate-400">Overview toko Anda</p>
+              </div>
 
-          <input
-            type="number"
-            placeholder="Harga"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            className="border p-2 rounded"
-            required
-          />
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-6">
+                  <p className="text-sm text-slate-400 font-semibold">Total Produk</p>
+                  <p className="text-4xl font-bold text-white mt-3">{products.length}</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-6">
+                  <p className="text-sm text-slate-400 font-semibold">Total Stok</p>
+                  <p className="text-4xl font-bold text-white mt-3">{totalStock}</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-6">
+                  <p className="text-sm text-slate-400 font-semibold">Stok Rendah</p>
+                  <p className="text-4xl font-bold text-rose-400 mt-3">{lowStockCount}</p>
+                  <p className="text-xs text-slate-500 mt-1">(≤ 5 item)</p>
+                </div>
+              </div>
 
-          <input
-            type="number"
-            placeholder="Stok"
-            value={stock}
-            onChange={(e) => setStock(e.target.value)}
-            className="border p-2 rounded"
-            required
-          />
-
-          <div className="flex items-center gap-4">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="imageType"
-                checked={!useUrl}
-                onChange={() => setUseUrl(false)}
-                className="mr-2"
-              />
-              Upload File
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="imageType"
-                checked={useUrl}
-                onChange={() => setUseUrl(true)}
-                className="mr-2"
-              />
-              Paste URL
-            </label>
-          </div>
-
-          {!useUrl ? (
-            <input
-              key="file-input"
-              type="file"
-              accept="image/*"
-              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-              className="border p-2 rounded"
-              required
-            />
-          ) : (
-            <input
-              type="text"
-              placeholder="Image URL"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              className="border p-2 rounded"
-              required
-            />
-          )}
-
-          {(imageFile || imageUrl) && (
-            <div className="mt-2">
-              <p className="text-sm font-medium mb-1">Preview:</p>
-              <img
-                src={imageFile ? URL.createObjectURL(imageFile) : imageUrl}
-                alt="Preview"
-                className="w-32 h-32 object-cover rounded border"
-              />
+              <button
+                onClick={() => getProducts()}
+                className="px-4 py-2 rounded-2xl bg-cyan-500/20 text-cyan-300 font-semibold hover:bg-cyan-500/30 transition"
+              >
+                Segarkan Data
+              </button>
             </div>
           )}
 
-          <button className="bg-black text-white p-2 rounded">
-            Tambah Produk
-          </button>
-        </form>
-      </div>
-
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Daftar Produk</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {products.map((item) => {
-            const imageSrc = item.ImgUrl || item.imageUrl || "";
-            const bestsellerPercent = typeof item.bestseller === "number"
-              ? item.bestseller
-              : item.bestseller
-                ? 80
-                : 20;
-
-            return (
-              <div key={item.id} className="border p-4 rounded-lg">
-                {imageSrc && (
-                  <img
-                    src={imageSrc}
-                    alt={item.name || "Produk"}
-                    className="w-full h-48 object-cover rounded mb-2"
-                  />
-                )}
-                <h3 className="font-semibold">{item.name}</h3>
-                <p>Harga: Rp {item.price}</p>
-                <p>Stok: {item.stock}</p>
-                {item.category && <p>Kategori: {item.category}</p>}
-                <div className="mt-2">
-                  <p className="text-sm">Bestseller:</p>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-green-500 h-2 rounded-full"
-                      style={{ width: `${Math.min(100, Math.max(0, bestsellerPercent))}%` }}
-                    ></div>
+          {activeTab === "tambah" && (
+            <div className="max-w-2xl">
+              <div className="mb-6">
+                <h2 className="text-3xl font-bold text-white">Tambah Produk Baru</h2>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-8">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-200">Nama Produk</label>
+                    <input
+                      type="text"
+                      placeholder="Misal: Kaos Premium Katun"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full rounded-2xl border border-slate-700/80 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+                      required
+                    />
                   </div>
-                  <p className="text-sm mt-1">{Math.min(100, Math.max(0, bestsellerPercent))}%</p>
-                </div>
-                <div className="flex gap-2 mt-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-slate-200">Harga (Rp)</label>
+                      <input
+                        type="number"
+                        placeholder="100000"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        className="w-full rounded-2xl border border-slate-700/80 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-slate-200">Stok</label>
+                      <input
+                        type="number"
+                        placeholder="10"
+                        value={stock}
+                        onChange={(e) => setStock(e.target.value)}
+                        className="w-full rounded-2xl border border-slate-700/80 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 rounded-2xl border border-slate-700/80 bg-slate-950/70 p-4">
+                    <p className="text-sm font-semibold text-slate-200">Sumber Gambar</p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="flex items-center gap-3 rounded-2xl border border-slate-700/80 bg-slate-900/80 px-4 py-3 cursor-pointer transition hover:border-cyan-400">
+                        <input
+                          type="radio"
+                          name="imageType"
+                          checked={!useUrl}
+                          onChange={() => setUseUrl(false)}
+                          className="h-4 w-4 accent-cyan-400"
+                        />
+                        <span className="font-medium text-slate-100">Upload File</span>
+                      </label>
+                      <label className="flex items-center gap-3 rounded-2xl border border-slate-700/80 bg-slate-900/80 px-4 py-3 cursor-pointer transition hover:border-cyan-400">
+                        <input
+                          type="radio"
+                          name="imageType"
+                          checked={useUrl}
+                          onChange={() => setUseUrl(true)}
+                          className="h-4 w-4 accent-cyan-400"
+                        />
+                        <span className="font-medium text-slate-100">Paste URL</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {!useUrl ? (
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-slate-200">Pilih File Gambar</label>
+                      <input
+                        key="file-input"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                        className="w-full rounded-2xl border border-slate-700/80 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+                        required
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-slate-200">URL Gambar</label>
+                      <input
+                        type="url"
+                        placeholder="https://example.com/image.jpg"
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        className="w-full rounded-2xl border border-slate-700/80 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {(imageFile || imageUrl) && (
+                    <div className="rounded-2xl border border-slate-700/80 bg-slate-900/80 p-4">
+                      <p className="text-sm font-semibold text-slate-200 mb-3">Preview Gambar</p>
+                      <img
+                        src={imageFile ? URL.createObjectURL(imageFile) : imageUrl}
+                        alt="Preview"
+                        className="w-full rounded-2xl object-cover border border-slate-700/80"
+                      />
+                    </div>
+                  )}
+
                   <button
-                    onClick={() => handleEditOpen(item)}
-                    className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+                    type="submit"
+                    className="w-full rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 text-base font-bold text-slate-950 shadow-lg transition hover:scale-[1.01]"
                   >
-                    Edit
+                    Tambah Produk
                   </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="bg-red-500 text-white px-3 py-1 rounded text-sm"
-                  >
-                    Hapus
-                  </button>
-                </div>
+                </form>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          )}
+
+          {activeTab === "produk" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-3xl font-bold text-white">Daftar Produk</h2>
+                <p className="text-slate-400 mt-2">Total: {products.length} produk</p>
+              </div>
+
+              {products.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-700/70 bg-slate-900/50 p-8 text-center text-slate-400">
+                  Belum ada produk
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {products.map((item) => {
+                    const imageSrc = item.ImgUrl || item.imageUrl || "";
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="rounded-2xl border border-slate-800/60 bg-slate-900/60 overflow-hidden transition hover:border-cyan-500/40"
+                      >
+                        <div className="relative aspect-square overflow-hidden bg-slate-800">
+                          {imageSrc ? (
+                            <img
+                              src={imageSrc}
+                              alt={item.name}
+                              className="h-full w-full object-cover transition duration-300 hover:scale-105"
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-slate-500 text-sm">No Image</div>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <h3 className="font-semibold text-white line-clamp-2 mb-2">{item.name}</h3>
+                          <p className="text-lg font-bold text-cyan-400 mb-3">Rp {item.price?.toLocaleString("id-ID")}</p>
+                          <div className="flex gap-2 text-xs mb-3">
+                            <span className={`rounded-lg px-2 py-1 $  {item.stock > 0 ? "bg-emerald-500/20 text-emerald-200" : "bg-rose-500/20 text-rose-200"}`}>
+                              {item.stock} stok
+                            </span>
+                            <span className="bg-slate-800 text-slate-300 rounded-lg px-2 py-1">
+                              {item.category || "Fashion"}
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleEditOpen(item)}
+                              className="flex-1 rounded-lg bg-blue-500/20 text-blue-300 text-sm font-semibold py-2 hover:bg-blue-500/30 transition"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (confirm("Hapus produk ini?")) {
+                                  handleDelete(item.id);
+                                }
+                              }}
+                              className="flex-1 rounded-lg bg-rose-500/20 text-rose-300 text-sm font-semibold py-2 hover:bg-rose-500/30 transition"
+                            >
+                              Hapus
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </main>
       </div>
 
+      {/* Edit Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-lg font-bold mb-4">Edit Produk</h2>
-
-            <input
-              type="text"
-              placeholder="Nama Produk"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              className="border p-2 rounded w-full mb-3"
-            />
-
-            <input
-              type="number"
-              placeholder="Harga"
-              value={editPrice}
-              onChange={(e) => setEditPrice(e.target.value)}
-              className="border p-2 rounded w-full mb-3"
-            />
-
-            <input
-              type="number"
-              placeholder="Stok"
-              value={editStock}
-              onChange={(e) => setEditStock(e.target.value)}
-              className="border p-2 rounded w-full mb-3"
-            />
-
-            <div className="flex items-center gap-4 mb-3">
-              <label className="flex items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-2xl bg-slate-950 p-8 shadow-2xl">
+            <h2 className="text-3xl font-bold text-white mb-6">Edit Produk</h2>
+            <div className="space-y-5">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-200">Nama Produk</label>
                 <input
-                  type="radio"
-                  name="editImageType"
-                  checked={editUseUrl}
-                  onChange={() => setEditUseUrl(true)}
-                  className="mr-2"
-                />
-                URL
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="editImageType"
-                  checked={!editUseUrl}
-                  onChange={() => setEditUseUrl(false)}
-                  className="mr-2"
-                />
-                Upload File
-              </label>
-            </div>
-
-            {editUseUrl ? (
-              <input
-                type="text"
-                placeholder="Image URL"
-                value={editImageUrl}
-                onChange={(e) => setEditImageUrl(e.target.value)}
-                className="border p-2 rounded w-full mb-3"
-              />
-            ) : (
-              <input
-                key="edit-file-input"
-                type="file"
-                accept="image/*"
-                onChange={(e) => setEditImageFile(e.target.files?.[0] || null)}
-                className="border p-2 rounded w-full mb-3"
-              />
-            )}
-
-            {editPreviewUrl && (
-              <div className="mb-3">
-                <p className="text-sm font-medium mb-1">Preview:</p>
-                <img
-                  src={editPreviewUrl}
-                  alt="Preview"
-                  className="w-32 h-32 object-cover rounded border"
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/80 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
                 />
               </div>
-            )}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-200">Harga</label>
+                  <input
+                    type="number"
+                    value={editPrice}
+                    onChange={(e) => setEditPrice(e.target.value)}
+                    className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/80 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-200">Stok</label>
+                  <input
+                    type="number"
+                    value={editStock}
+                    onChange={(e) => setEditStock(e.target.value)}
+                    className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/80 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+                  />
+                </div>
+              </div>
 
-            <div className="flex gap-2">
+              <div className="space-y-3 rounded-2xl border border-slate-700/80 bg-slate-900/80 p-4">
+                <p className="text-sm font-semibold text-slate-200">Sumber Gambar</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="flex items-center gap-3 rounded-2xl border border-slate-700/80 bg-slate-950/80 px-4 py-3 cursor-pointer transition hover:border-cyan-400">
+                    <input
+                      type="radio"
+                      name="editImageType"
+                      checked={editUseUrl}
+                      onChange={() => setEditUseUrl(true)}
+                      className="h-4 w-4 accent-cyan-400"
+                    />
+                    <span className="font-medium text-slate-100">URL</span>
+                  </label>
+                  <label className="flex items-center gap-3 rounded-2xl border border-slate-700/80 bg-slate-950/80 px-4 py-3 cursor-pointer transition hover:border-cyan-400">
+                    <input
+                      type="radio"
+                      name="editImageType"
+                      checked={!editUseUrl}
+                      onChange={() => setEditUseUrl(false)}
+                      className="h-4 w-4 accent-cyan-400"
+                    />
+                    <span className="font-medium text-slate-100">Upload</span>
+                  </label>
+                </div>
+              </div>
+
+              {editUseUrl ? (
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-200">URL Gambar</label>
+                  <input
+                    type="url"
+                    value={editImageUrl}
+                    onChange={(e) => setEditImageUrl(e.target.value)}
+                    className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/80 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-200">File Gambar</label>
+                  <input
+                    key="edit-file-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setEditImageFile(e.target.files?.[0] || null)}
+                    className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/80 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+                  />
+                </div>
+              )}
+
+              {editPreviewUrl && (
+                <div className="rounded-2xl border border-slate-700/80 bg-slate-900/80 p-4">
+                  <p className="text-sm font-semibold text-slate-200 mb-3">Preview</p>
+                  <img src={editPreviewUrl} alt="Preview" className="w-full rounded-2xl object-cover border border-slate-700/80" />
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <button
                 onClick={handleEditSave}
-                className="bg-green-500 text-white px-4 py-2 rounded flex-1"
+                className="flex-1 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-4 font-semibold text-slate-950 transition hover:scale-[1.01]"
               >
-                Simpan
+                Simpan Perubahan
               </button>
               <button
                 onClick={handleEditClose}
-                className="bg-gray-400 text-white px-4 py-2 rounded flex-1"
+                className="flex-1 rounded-2xl border border-slate-700/80 bg-slate-950/80 px-5 py-4 font-semibold text-slate-100 transition hover:border-rose-400"
               >
                 Batal
               </button>

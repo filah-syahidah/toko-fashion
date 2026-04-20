@@ -6,7 +6,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,8 +18,8 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      alert("Login berhasil!");
-      router.push("/");
+      alert("Login admin berhasil!");
+      router.push("/admin");
     } catch (error) {
       alert("Login gagal! Periksa email dan password Anda.");
     } finally {
@@ -41,8 +41,8 @@ export default function LoginPage() {
                   Toko Fashion
                 </p>
               </Link>
-              <h1 className="text-3xl font-extrabold text-white">Masuk Akun</h1>
-              <p className="text-slate-400">Masuk untuk mulai berbelanja</p>
+              <h1 className="text-3xl font-extrabold text-white">Admin Login</h1>
+              <p className="text-slate-400">Masuk ke dashboard admin untuk mengelola toko Anda</p>
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-8 shadow-2xl backdrop-blur-xl">
@@ -51,7 +51,7 @@ export default function LoginPage() {
                   <label className="mb-2 block text-sm font-semibold text-slate-200">Email</label>
                   <input
                     type="email"
-                    placeholder="email@example.com"
+                    placeholder="admin@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full rounded-2xl border border-slate-700/80 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
@@ -76,15 +76,12 @@ export default function LoginPage() {
                   disabled={loading}
                   className="w-full rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 text-base font-bold text-slate-950 shadow-lg transition hover:scale-[1.01] disabled:opacity-50"
                 >
-                  {loading ? "Mengecek..." : "Masuk"}
+                  {loading ? "Mengecek..." : "Masuk ke Admin"}
                 </button>
               </form>
 
               <p className="mt-6 text-center text-sm text-slate-400">
-                Belum punya akun?{" "}
-                <Link href="/register" className="text-cyan-400 hover:text-cyan-300 transition">
-                  Daftar di sini
-                </Link>
+                Tidak punya akses? Hubungi administrator
               </p>
             </div>
 

@@ -2,26 +2,42 @@
 
 import { useState } from "react";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = async (e: any) => {
+  const handleRegister = async (e: any) => {
     e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      alert("Password tidak cocok!");
+      return;
+    }
+
+    if (password.length < 6) {
+      alert("Password minimal 6 karakter!");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      alert("Login berhasil!");
-      router.push("/");
-    } catch (error) {
-      alert("Login gagal! Periksa email dan password Anda.");
+      await createUserWithEmailAndPassword(auth, email, password);
+      alert("Registrasi berhasil! Silakan login.");
+      router.push("/login");
+    } catch (error: any) {
+      if (error.code === "auth/email-already-in-use") {
+        alert("Email sudah terdaftar!");
+      } else {
+        alert("Registrasi gagal! Periksa email dan password Anda.");
+      }
     } finally {
       setLoading(false);
     }
@@ -41,12 +57,12 @@ export default function LoginPage() {
                   Toko Fashion
                 </p>
               </Link>
-              <h1 className="text-3xl font-extrabold text-white">Masuk Akun</h1>
-              <p className="text-slate-400">Masuk untuk mulai berbelanja</p>
+              <h1 className="text-3xl font-extrabold text-white">Daftar Akun</h1>
+              <p className="text-slate-400">Buat akun untuk mulai berbelanja</p>
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-slate-900/80 p-8 shadow-2xl backdrop-blur-xl">
-              <form onSubmit={handleLogin} className="space-y-5">
+              <form onSubmit={handleRegister} className="space-y-5">
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-200">Email</label>
                   <input
@@ -63,9 +79,21 @@ export default function LoginPage() {
                   <label className="mb-2 block text-sm font-semibold text-slate-200">Password</label>
                   <input
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Minimal 6 karakter"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-2xl border border-slate-700/80 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-200">Konfirmasi Password</label>
+                  <input
+                    type="password"
+                    placeholder="Ulangi password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     className="w-full rounded-2xl border border-slate-700/80 bg-slate-950/70 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
                     required
                   />
@@ -76,14 +104,14 @@ export default function LoginPage() {
                   disabled={loading}
                   className="w-full rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 text-base font-bold text-slate-950 shadow-lg transition hover:scale-[1.01] disabled:opacity-50"
                 >
-                  {loading ? "Mengecek..." : "Masuk"}
+                  {loading ? "Mendaftarkan..." : "Daftar Sekarang"}
                 </button>
               </form>
 
               <p className="mt-6 text-center text-sm text-slate-400">
-                Belum punya akun?{" "}
-                <Link href="/register" className="text-cyan-400 hover:text-cyan-300 transition">
-                  Daftar di sini
+                Sudah punya akun?{" "}
+                <Link href="/login" className="text-cyan-400 hover:text-cyan-300 transition">
+                  Masuk di sini
                 </Link>
               </p>
             </div>
