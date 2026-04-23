@@ -109,9 +109,24 @@ export default function Home() {
                             </div>
                           </div>
 
-                          <button className="w-full rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-2 py-2 text-xs font-semibold text-slate-950 transition hover:scale-[1.02]">
-                            Lihat Detail
-                          </button>
+                          <div className="space-y-2">
+                            <button className="w-full rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-2 py-2 text-xs font-semibold text-slate-950 transition hover:scale-[1.02]">
+                              Lihat Detail
+                            </button>
+
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                const phone = "6289670482450";
+                                const message = `Halo, saya mau beli produk:%0A%0ANama: ${item.name}%0AHarga: Rp ${item.price}`;
+                                const url = `https://wa.me/${phone}?text=${message}`;
+                                window.open(url, "_blank");
+                              }}
+                              className="w-full rounded-lg bg-green-500 px-2 py-2 text-xs font-semibold text-white transition hover:scale-[1.02]"
+                            >
+                              Beli via WhatsApp
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </Link>

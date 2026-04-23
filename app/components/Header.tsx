@@ -34,15 +34,11 @@ export default function Header() {
         <nav className="hidden md:flex gap-8">
           <Link
             href="/"
-            className={`text-sm font-semibold transition ${pathname === "/" ? "text-cyan-400" : "text-slate-400 hover:text-white"}`}
+            className={`text-sm font-semibold transition ${
+              pathname === "/" ? "text-cyan-400" : "text-slate-400 hover:text-white"
+            }`}
           >
             Beranda
-          </Link>
-          <Link
-            href="/admin"
-            className={`text-sm font-semibold transition ${pathname === "/admin" ? "text-cyan-400" : "text-slate-400 hover:text-white"}`}
-          >
-            Admin
           </Link>
         </nav>
 

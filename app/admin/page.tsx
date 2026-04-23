@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -28,6 +28,21 @@ export default function AdminPage() {
   const [editUseUrl, setEditUseUrl] = useState(true);
   const [editPreviewUrl, setEditPreviewUrl] = useState("");
 
+  useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      router.push("/login");
+    } else {
+      // 🔒 GANTI EMAIL INI DENGAN EMAIL ADMIN KAMU
+      if (user.email !== "admin@gmail.com") {
+        alert("Akses ditolak! Ini halaman admin.");
+        router.push("/");
+      }
+    }
+  });
+
+  return () => unsubscribe();
+}, [router]);
   const getProducts = async () => {
     const querySnapshot = await getDocs(collection(db, "product"));
     const data = querySnapshot.docs.map((doc) => ({
@@ -225,31 +240,28 @@ export default function AdminPage() {
           <nav className="space-y-3">
             <button
               onClick={() => setActiveTab("dashboard")}
-              className={`w-full text-left px-4 py-3 rounded-2xl font-semibold transition ${
-                activeTab === "dashboard"
+              className={`w-full text-left px-4 py-3 rounded-2xl font-semibold transition ${activeTab === "dashboard"
                   ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
                   : "text-slate-300 hover:bg-slate-800"
-              }`}
+                }`}
             >
               Dashboard
             </button>
             <button
               onClick={() => setActiveTab("tambah")}
-              className={`w-full text-left px-4 py-3 rounded-2xl font-semibold transition ${
-                activeTab === "tambah"
+              className={`w-full text-left px-4 py-3 rounded-2xl font-semibold transition ${activeTab === "tambah"
                   ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
                   : "text-slate-300 hover:bg-slate-800"
-              }`}
+                }`}
             >
               Tambah Produk
             </button>
             <button
               onClick={() => setActiveTab("produk")}
-              className={`w-full text-left px-4 py-3 rounded-2xl font-semibold transition ${
-                activeTab === "produk"
+              className={`w-full text-left px-4 py-3 rounded-2xl font-semibold transition ${activeTab === "produk"
                   ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
                   : "text-slate-300 hover:bg-slate-800"
-              }`}
+                }`}
             >
               Daftar Produk
             </button>
@@ -260,11 +272,16 @@ export default function AdminPage() {
             >
               Lihat Toko
             </button>
-            <Link href="/login" className="block">
-              <button className="w-full text-left px-4 py-3 rounded-2xl font-semibold text-rose-300 hover:bg-rose-500/10 transition">
-                Logout
-              </button>
-            </Link>
+
+            <button
+              onClick={async () => {
+                await signOut(auth);
+                router.push("/login");
+              }}
+              className="w-full text-left px-4 py-3 rounded-2xl font-semibold text-rose-300 hover:bg-rose-500/10 transition"
+            >
+              Logout
+            </button>
           </nav>
         </aside>
 
@@ -490,47 +507,59 @@ export default function AdminPage() {
           )}
         </main>
       </div>
-
       {/* Edit Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-2xl bg-slate-950 p-8 shadow-2xl">
-            <h2 className="text-3xl font-bold text-white mb-6">Edit Produk</h2>
-            <div className="space-y-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg sm:max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl bg-slate-950 p-5 sm:p-6 shadow-2xl">
+
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4">
+              Edit Produk
+            </h2>
+
+            <div className="space-y-4">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-200">Nama Produk</label>
+                <label className="mb-2 block text-sm font-semibold text-slate-200">
+                  Nama Produk
+                </label>
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/80 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+                  className="w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:border-cyan-400"
                 />
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-200">Harga</label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-200">
+                    Harga
+                  </label>
                   <input
                     type="number"
                     value={editPrice}
                     onChange={(e) => setEditPrice(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/80 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+                    className="w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:border-cyan-400"
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-200">Stok</label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-200">
+                    Stok
+                  </label>
                   <input
                     type="number"
                     value={editStock}
                     onChange={(e) => setEditStock(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/80 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+                    className="w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:border-cyan-400"
                   />
                 </div>
               </div>
 
-              <div className="space-y-3 rounded-2xl border border-slate-700/80 bg-slate-900/80 p-4">
-                <p className="text-sm font-semibold text-slate-200">Sumber Gambar</p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="flex items-center gap-3 rounded-2xl border border-slate-700/80 bg-slate-950/80 px-4 py-3 cursor-pointer transition hover:border-cyan-400">
+              <div className="space-y-3 rounded-xl border border-slate-700/80 bg-slate-900/80 p-3">
+                <p className="text-sm font-semibold text-slate-200">
+                  Sumber Gambar
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <label className="flex items-center gap-2 rounded-xl border border-slate-700/80 bg-slate-950/80 px-3 py-2 cursor-pointer transition hover:border-cyan-400">
                     <input
                       type="radio"
                       name="editImageType"
@@ -538,9 +567,9 @@ export default function AdminPage() {
                       onChange={() => setEditUseUrl(true)}
                       className="h-4 w-4 accent-cyan-400"
                     />
-                    <span className="font-medium text-slate-100">URL</span>
+                    <span className="text-sm text-slate-100">URL</span>
                   </label>
-                  <label className="flex items-center gap-3 rounded-2xl border border-slate-700/80 bg-slate-950/80 px-4 py-3 cursor-pointer transition hover:border-cyan-400">
+                  <label className="flex items-center gap-2 rounded-xl border border-slate-700/80 bg-slate-950/80 px-3 py-2 cursor-pointer transition hover:border-cyan-400">
                     <input
                       type="radio"
                       name="editImageType"
@@ -548,52 +577,64 @@ export default function AdminPage() {
                       onChange={() => setEditUseUrl(false)}
                       className="h-4 w-4 accent-cyan-400"
                     />
-                    <span className="font-medium text-slate-100">Upload</span>
+                    <span className="text-sm text-slate-100">Upload</span>
                   </label>
                 </div>
               </div>
 
               {editUseUrl ? (
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-200">URL Gambar</label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-200">
+                    URL Gambar
+                  </label>
                   <input
                     type="url"
                     value={editImageUrl}
                     onChange={(e) => setEditImageUrl(e.target.value)}
-                    className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/80 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+                    className="w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:border-cyan-400"
                   />
                 </div>
               ) : (
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-200">File Gambar</label>
+                  <label className="mb-2 block text-sm font-semibold text-slate-200">
+                    File Gambar
+                  </label>
                   <input
                     key="edit-file-input"
                     type="file"
                     accept="image/*"
-                    onChange={(e) => setEditImageFile(e.target.files?.[0] || null)}
-                    className="w-full rounded-2xl border border-slate-700/80 bg-slate-900/80 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400"
+                    onChange={(e) =>
+                      setEditImageFile(e.target.files?.[0] || null)
+                    }
+                    className="w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:border-cyan-400"
                   />
                 </div>
               )}
 
               {editPreviewUrl && (
-                <div className="rounded-2xl border border-slate-700/80 bg-slate-900/80 p-4">
-                  <p className="text-sm font-semibold text-slate-200 mb-3">Preview</p>
-                  <img src={editPreviewUrl} alt="Preview" className="w-full rounded-2xl object-cover border border-slate-700/80" />
+                <div className="rounded-xl border border-slate-700/80 bg-slate-900/80 p-3">
+                  <p className="text-sm font-semibold text-slate-200 mb-2">
+                    Preview
+                  </p>
+                  <img
+                    src={editPreviewUrl}
+                    alt="Preview"
+                    className="w-full max-h-48 object-cover rounded-xl border border-slate-700/80"
+                  />
                 </div>
               )}
             </div>
 
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button
                 onClick={handleEditSave}
-                className="flex-1 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-4 font-semibold text-slate-950 transition hover:scale-[1.01]"
+                className="flex-1 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-3 text-sm sm:text-base font-semibold text-slate-950 transition hover:scale-[1.01]"
               >
-                Simpan Perubahan
+                Simpan
               </button>
               <button
                 onClick={handleEditClose}
-                className="flex-1 rounded-2xl border border-slate-700/80 bg-slate-950/80 px-5 py-4 font-semibold text-slate-100 transition hover:border-rose-400"
+                className="flex-1 rounded-xl border border-slate-700/80 bg-slate-950/80 px-4 py-3 text-sm sm:text-base font-semibold text-slate-100 transition hover:border-rose-400"
               >
                 Batal
               </button>
