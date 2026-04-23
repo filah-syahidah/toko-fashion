@@ -17,9 +17,30 @@ export default function AdminLoginPage() {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      alert("Login admin berhasil!");
-      router.push("/admin");
+      const handleLogin = async (e: any) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+          const res = await signInWithEmailAndPassword(auth, email, password);
+
+          const user = res.user;
+
+          // GANTI EMAIL INI DENGAN EMAIL ADMIN KAMU
+          if (user.email === "admin@gmail.com") {
+            alert("Login admin berhasil!");
+            router.push("/admin");
+          } else {
+            alert("Login berhasil!");
+            router.push("/");
+          }
+
+        } catch (error) {
+          alert("Login gagal! Periksa email dan password Anda.");
+        } finally {
+          setLoading(false);
+        }
+      };
     } catch (error) {
       alert("Login gagal! Periksa email dan password Anda.");
     } finally {

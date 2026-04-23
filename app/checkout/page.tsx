@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { addDoc, collection } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -38,7 +40,7 @@ export default function CheckoutPage() {
   const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const grandTotal = totalPrice + shippingCost;
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     if (!formData.fullName || !formData.email || !formData.phone || !formData.address || !formData.city) {
@@ -47,23 +49,25 @@ export default function CheckoutPage() {
     }
 
     const order = {
-      id: Date.now().toString(),
       items: cartItems,
       totalPrice,
       shippingCost,
       grandTotal,
       customer: formData,
       status: "pending",
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
     };
 
-    const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-    orders.push(order);
-    localStorage.setItem("orders", JSON.stringify(orders));
+    try {
+      await addDoc(collection(db, "orders"), order);
 
-    alert("Pesanan dibuat! ID: " + order.id);
-    localStorage.setItem("cart", JSON.stringify([]));
-    router.push("/");
+      alert("Pesanan berhasil dibuat!");
+      localStorage.setItem("cart", JSON.stringify([]));
+      router.push("/");
+    } catch (error: any) {
+      console.error("ORDER ERROR:", error);
+      alert(error.message || "Gagal membuat pesanan!");
+    }
   };
 
   if (loading) {

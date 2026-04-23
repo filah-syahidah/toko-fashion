@@ -11,13 +11,18 @@ export default function Home() {
 
   const getProducts = async () => {
     setIsLoading(true);
-    const querySnapshot = await getDocs(collection(db, "product"));
-    const data = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setProducts(data);
-    setIsLoading(false);
+    try {
+      const querySnapshot = await getDocs(collection(db, "product"));
+      const data = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setProducts(data);
+    } catch (error) {
+      console.error("Error fetching products: ", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -26,116 +31,121 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(59,130,246,0.25),_transparent_40%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_rgba(236,72,153,0.2),_transparent_40%)]" />
+      <div className="max-w-7xl mx-auto px-6 py-16">
 
-        <div className="relative z-10">
-          <div className="max-w-7xl mx-auto px-6 py-20">
-            <div className="mb-16 space-y-6 max-w-3xl">
-              <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/80">Koleksi Eksklusif</p>
-              <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight text-white">
-                Tren Fashion Terkini
-              </h1>
-              <p className="text-lg text-slate-300 leading-8">
-                Jelajahi koleksi fashion terbaru kami dengan desain modern dan kualitas premium. Temukan gaya yang sempurna untuk Anda.
-              </p>
-            </div>
-
-            {isLoading ? (
-              <div className="flex justify-center items-center min-h-96">
-                <div className="text-slate-400">Sedang memuat produk...</div>
-              </div>
-            ) : products.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-slate-700/70 bg-slate-900/70 p-10 text-center text-slate-400">
-                Belum ada produk. Tambahkan produk di halaman admin.
-              </div>
-            ) : (
-              <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {products.map((item, index) => {
-                  const imageSrc = item.ImgUrl || item.imageUrl || "";
-                  const bestsellerPercent = typeof item.bestseller === "number"
-                    ? item.bestseller
-                    : item.bestseller
-                      ? 80
-                      : 20;
-
-                  return (
-                    <Link key={item.id} href={`/products/${item.id}`}>
-                      <div className="group h-full overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-900/60 transition hover:border-cyan-500/40 hover:shadow-lg cursor-pointer">
-                        <div className="relative aspect-square overflow-hidden bg-slate-800">
-                          {imageSrc ? (
-                            <img
-                              src={imageSrc}
-                              alt={item.name}
-                              className="h-full w-full object-cover transition duration-300 group-hover:scale-110"
-                            />
-                          ) : (
-                            <div className="flex h-full items-center justify-center text-slate-500 text-xs">No Image</div>
-                          )}
-                          {item.bestseller && (
-                            <div className="absolute top-2 right-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-2 py-1 text-[10px] font-bold text-white">
-                              Best Seller
-                            </div>
-                          )}
-                          {item.stock <= 0 && (
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">Habis</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="p-3">
-                          <h3 className="text-sm font-semibold text-white line-clamp-2 mb-2 h-9">{item.name}</h3>
-
-                          <p className="text-base font-bold text-white mb-2">Rp {item.price?.toLocaleString("id-ID")}</p>
-
-                          {item.category && (
-                            <span className="inline-block rounded-lg bg-cyan-500/20 px-2 py-0.5 text-[10px] font-semibold text-cyan-200 mb-2">
-                              {item.category}
-                            </span>
-                          )}
-
-                          <div className="space-y-1 mb-2">
-                            <div className="flex items-center justify-between text-[11px] text-slate-400">
-                              <span>Penjualan</span>
-                              <span className="font-semibold text-white">{bestsellerPercent}%</span>
-                            </div>
-                            <div className="h-1.5 overflow-hidden rounded-full bg-slate-800">
-                              <div
-                                className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-orange-500"
-                                style={{ width: `${Math.min(100, Math.max(0, bestsellerPercent))}%` }}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <button className="w-full rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-2 py-2 text-xs font-semibold text-slate-950 transition hover:scale-[1.02]">
-                              Lihat Detail
-                            </button>
-
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                const phone = "6289670482450";
-                                const message = `Halo, saya mau beli produk:%0A%0ANama: ${item.name}%0AHarga: Rp ${item.price}`;
-                                const url = `https://wa.me/${phone}?text=${message}`;
-                                window.open(url, "_blank");
-                              }}
-                              className="w-full rounded-lg bg-green-500 px-2 py-2 text-xs font-semibold text-white transition hover:scale-[1.02]"
-                            >
-                              Beli via WhatsApp
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+        {/* 🔥 HEADER */}
+        <div className="mb-12 text-center space-y-4">
+          <p className="text-sm uppercase tracking-[0.35em] text-cyan-300/80">
+            Koleksi Eksklusif
+          </p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white">
+            Home Fashion Store
+          </h1>
+          <p className="text-slate-400 max-w-xl mx-auto">
+            Pilih style favoritmu dan beli langsung via WhatsApp atau keranjang.
+          </p>
         </div>
+
+        {/* 🔥 CONTENT */}
+        {isLoading ? (
+          <div className="flex justify-center items-center min-h-[200px]">
+            <div className="animate-pulse text-slate-400 font-medium">Loading produk...</div>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center text-slate-400 py-20">
+            Belum ada produk tersedia.
+          </div>
+        ) : (
+          <div className="grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {products.map((item) => {
+              const imageSrc = item.ImgUrl || item.imageUrl || "";
+              // Logika Bestseller dari Firestore
+              const isBestseller = item.bestseller === true;
+
+              return (
+                <Link key={item.id} href={`/products/${item.id}`}>
+                  <div className="group bg-slate-900/60 rounded-2xl overflow-hidden border border-slate-800 hover:border-cyan-500/40 transition-all duration-300 cursor-pointer relative flex flex-col h-full">
+                    
+                    {/* 🔥 BADGE BESTSELLER */}
+                    {isBestseller && (
+                      <div className="absolute top-3 left-3 z-10">
+                        <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-black px-2.5 py-1 rounded-md uppercase tracking-tighter shadow-xl">
+                          Bestseller
+                        </span>
+                      </div>
+                    )}
+
+                    {/* IMAGE SECTION */}
+                    <div className="aspect-square bg-slate-800 overflow-hidden relative">
+                      {imageSrc ? (
+                        <img
+                          src={imageSrc}
+                          alt={item.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-slate-500 text-xs italic">
+                          No Image Available
+                        </div>
+                      )}
+                    </div>
+
+                    {/* CONTENT SECTION */}
+                    <div className="p-4 flex flex-col flex-grow space-y-3">
+                      <div className="space-y-1">
+                        {/* CATEGORY */}
+                        {item.category && (
+                          <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest opacity-80">
+                            {item.category}
+                          </p>
+                        )}
+                        <h3 className="text-sm font-semibold line-clamp-2 text-slate-100 group-hover:text-cyan-300 transition-colors">
+                          {item.name}
+                        </h3>
+                      </div>
+
+                      <div className="flex justify-between items-baseline mt-auto">
+                        <p className="font-bold text-lg text-white">
+                          <span className="text-xs font-normal text-slate-400 mr-0.5">Rp</span>
+                          {item.price?.toLocaleString("id-ID")}
+                        </p>
+                        {/* STOCK INFO */}
+                        {item.stock !== undefined && (
+                          <p className="text-[10px] text-slate-500 font-medium">
+                            Stok: {item.stock}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* 🔥 ACTION BUTTONS */}
+                      <div className="flex gap-2 pt-2">
+                        <button className="flex-1 text-[11px] font-bold bg-slate-800 text-white hover:bg-cyan-500 hover:text-black py-2.5 rounded-xl transition-all border border-slate-700 hover:border-cyan-400">
+                          Detail
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const phone = "6289670482450";
+                            const message = `Halo, saya tertarik dengan produk ini:\n\n*${item.name}*\nHarga: Rp ${item.price?.toLocaleString("id-ID")}\n\nApakah masih tersedia?`;
+                            window.open(
+                              `https://wa.me/${phone}?text=${encodeURIComponent(message)}`,
+                              "_blank"
+                            );
+                          }}
+                          className="flex-1 text-[11px] font-bold bg-green-600 hover:bg-green-500 text-white py-2.5 rounded-xl transition-all shadow-lg shadow-green-900/20"
+                        >
+                          WhatsApp
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
