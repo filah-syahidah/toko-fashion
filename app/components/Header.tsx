@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ShoppingCartIcon } from '@heroicons/react/24/solid';
 
 export default function Header() {
   const pathname = usePathname();
@@ -25,12 +26,14 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        {/* Logo / Nama Toko */}
         <Link href="/">
           <div className="text-xl font-bold cursor-pointer text-white hover:text-cyan-400 transition">
             TOKO FASHION
           </div>
         </Link>
 
+        {/* Navigasi */}
         <nav className="hidden md:flex gap-8">
           <Link
             href="/"
@@ -42,14 +45,17 @@ export default function Header() {
           </Link>
         </nav>
 
+        {/* Icon Keranjang */}
         <Link href="/cart">
-          <button className="relative rounded-2xl border border-slate-700/80 bg-slate-900/80 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-400">
-            Keranjang
+          <button className="relative rounded-2xl border border-slate-700/80 bg-slate-900/80 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:border-cyan-400 hover:text-cyan-400 flex items-center space-x-2">
+            <ShoppingCartIcon className="h-5 w-5" />
             {cartCount > 0 && (
               <span className="absolute -top-2 -right-3 flex h-5 w-5 items-center justify-center rounded-full bg-cyan-500 text-xs font-bold text-white">
                 {cartCount}
               </span>
             )}
+            {/* Jika ingin ada teks, bisa tambahkan di sini */}
+            {/* <span>Keranjang</span> */}
           </button>
         </Link>
       </div>
