@@ -36,11 +36,11 @@ export default function Home() {
         {/* 🔥 HEADER FIX FINAL */}
         <div className="mb-12 text-center space-y-6">
           {/* LOGO BESAR DI ATAS */}
-          <div className="flex justify-center">
+          <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
             <img
-              src="/logo.png"
-              alt="Logo"
-              className="h-48 sm:h-56 md:h-64 w-auto object-contain"
+              src="/banner.png"
+              alt="banner"
+              className="w-full h-[220px] sm:h-[280px] md:h-[380px] object-cover"
             />
           </div>
 
